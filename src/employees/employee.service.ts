@@ -12,3 +12,21 @@ export const getAllEmployees = async () => {
   });
 };
 
+export const verifyCredentials = async (email: string, password: string) => {
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      password: true,
+      role: true,
+    },
+  });
+
+  if (!user || user.password !== password) {
+    return null;
+  }
+
+  return user;
+};
+

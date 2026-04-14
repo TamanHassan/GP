@@ -10,4 +10,7 @@ app.get("/", (req, res) => {
   res.json({ message: "API is running" });
 });
 
-app.listen(3000, () => console.log("Server running at http://localhost:3000"));
+const port = Number(process.env.PORT) || 3000;
+console.log("Server cwd:", process.cwd());
+console.log("Server port:", port);
+app.listen(port, () => console.log(`Server running at http://localhost:${port}`));
