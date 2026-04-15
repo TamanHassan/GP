@@ -113,8 +113,6 @@ function makeStatusBadge(day, field) {
   const span = document.createElement('span')
   span.className = 'cell-status'
 
-  const isPartial = day.preferMorning || day.preferAfternoon || day.preferNight
-
   if (!day.dayStatus) {
     span.className += ' not-set'
     span.textContent = '–'
@@ -124,7 +122,7 @@ function makeStatusBadge(day, field) {
   } else if (day[field]) {
     span.className += ' prefer'
     span.textContent = 'Föredrar'
-  } else if (isPartial) {
+  } else if (day.isPartial) {
     span.className += ' unavailable'
     span.textContent = 'Ej tillgänglig'
   } else {
@@ -176,7 +174,7 @@ function selectStatus(status) {
 }
 
 function toggleShift(shift) {
-  if (modalStatus !== 'partial') return
+  if (modalStatus !== 'all' && modalStatus !== 'partial') return
   modalShifts[shift] = !modalShifts[shift]
   renderModal()
 }
@@ -186,11 +184,11 @@ function renderModal() {
   document.getElementById('opt-partial').classList.toggle('selected', modalStatus === 'partial')
   document.getElementById('opt-unavail').classList.toggle('selected', modalStatus === 'unavailable')
 
-  const shiftsDisabled = modalStatus !== 'partial'
+  const shiftsEnabled = modalStatus === 'all' || modalStatus === 'partial'
   ;['morning', 'afternoon', 'evening'].forEach(s => {
     const btn = document.getElementById(`shift-${s}`)
-    btn.disabled = shiftsDisabled
-    btn.classList.toggle('selected', !shiftsDisabled && modalShifts[s])
+    btn.disabled = !shiftsEnabled
+    btn.classList.toggle('selected', shiftsEnabled && modalShifts[s])
   })
 }
 
@@ -203,15 +201,17 @@ function confirmModal() {
   const day = weekData[activeIndex]
 
   if (modalStatus === 'unavailable') {
-    day.dayStatus      = 'UNAVAILABLE'
-    day.preferMorning  = false
+    day.dayStatus       = 'UNAVAILABLE'
+    day.preferMorning   = false
     day.preferAfternoon = false
-    day.preferNight    = false
+    day.preferNight     = false
+    day.isPartial       = false
   } else {
     day.dayStatus       = 'AVAILABLE'
-    day.preferMorning   = modalStatus === 'partial' ? modalShifts.morning   : false
-    day.preferAfternoon = modalStatus === 'partial' ? modalShifts.afternoon : false
-    day.preferNight     = modalStatus === 'partial' ? modalShifts.evening   : false
+    day.preferMorning   = modalShifts.morning
+    day.preferAfternoon = modalShifts.afternoon
+    day.preferNight     = modalShifts.evening
+    day.isPartial       = modalStatus === 'partial'
   }
 
   renderTable()
@@ -236,11 +236,12 @@ async function saveAvailability() {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          date:           day.date,
-          dayStatus:      day.dayStatus,
-          preferMorning:  day.preferMorning,
+          date:            day.date,
+          dayStatus:       day.dayStatus,
+          preferMorning:   day.preferMorning,
           preferAfternoon: day.preferAfternoon,
-          preferNight:    day.preferNight,
+          preferNight:     day.preferNight,
+          isPartial:       day.isPartial,
         })
       })
     ))

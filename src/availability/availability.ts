@@ -25,7 +25,7 @@ export async function getMyAvailability(req: Request, res: Response) {
 
   const rows = await prisma.availability.findMany({
     where: {
-      employeeId: req.user!.id,
+      employeeId: req.user!.userId,
       date: {
         gte: startDate,
         lte: endDate,
@@ -43,6 +43,7 @@ export async function getMyAvailability(req: Request, res: Response) {
       preferMorning: row?.preferMorning ?? false,
       preferAfternoon: row?.preferAfternoon ?? false,
       preferNight: row?.preferNight ?? false,
+      isPartial: row?.isPartial ?? false,
     }
   })
 
@@ -56,16 +57,16 @@ export async function updateMyAvailability(req: Request, res: Response) {
     return res.status(400).json({ error: parsed.error.flatten() })
   }
 
-  const { date, dayStatus, preferMorning, preferAfternoon, preferNight } = parsed.data
+  const { date, dayStatus, preferMorning, preferAfternoon, preferNight, isPartial } = parsed.data
 
   const prefer = dayStatus === 'AVAILABLE'
-    ? { preferMorning, preferAfternoon, preferNight }
-    : { preferMorning: false, preferAfternoon: false, preferNight: false }
+    ? { preferMorning, preferAfternoon, preferNight, isPartial }
+    : { preferMorning: false, preferAfternoon: false, preferNight: false, isPartial: false }
 
   const availability = await prisma.availability.upsert({
     where: {
       employeeId_date: {
-        employeeId: req.user!.id,
+        employeeId: req.user!.userId,
         date: new Date(date),
       },
     },
@@ -74,7 +75,7 @@ export async function updateMyAvailability(req: Request, res: Response) {
       ...prefer,
     },
     create: {
-      employeeId: req.user!.id,
+      employeeId: req.user!.userId,
       date: new Date(date),
       dayStatus,
       ...prefer,

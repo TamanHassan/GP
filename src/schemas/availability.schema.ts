@@ -6,6 +6,7 @@ export const updateAvailabilitySchema = z.object({
   preferMorning: z.boolean().optional().default(false),
   preferAfternoon: z.boolean().optional().default(false),
   preferNight: z.boolean().optional().default(false),
+  isPartial: z.boolean().optional().default(false),
 })
 
 export type UpdateAvailabilityInput = z.infer<typeof updateAvailabilitySchema>
