@@ -1,7 +1,14 @@
 const DAY_NAMES = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön']
 
 let currentWeekStart = getMondayOf(new Date())
-let weekData = [] // array of 7 { date, dayStatus, preferMorning, preferAfternoon, preferNight }
+let weekData = []
+
+// Modal state
+let activeIndex = null
+let modalStatus = null       // 'all' | 'partial' | 'unavailable'
+let modalShifts = { morning: false, afternoon: false, evening: false }
+
+// --- Init ---
 
 const token = localStorage.getItem('token')
 
@@ -12,6 +19,7 @@ if (!token) {
   loadWeek()
 }
 
+// --- Week helpers ---
 
 function getMondayOf(date) {
   const d = new Date(date)
@@ -26,17 +34,16 @@ function toISO(date) {
   return date.toISOString().split('T')[0]
 }
 
-function changeWeek(direction) {
-  currentWeekStart.setDate(currentWeekStart.getDate() + direction * 7)
+function changeWeek(dir) {
+  currentWeekStart.setDate(currentWeekStart.getDate() + dir * 7)
   loadWeek()
 }
 
+// --- Load ---
 
 async function loadWeek() {
   const weekStart = toISO(currentWeekStart)
-
-  document.getElementById('week-label').textContent =
-    `Vecka från ${weekStart}`
+  document.getElementById('week-label').textContent = `Vecka från ${weekStart}`
 
   try {
     const res = await fetch(`/availability/me?weekStart=${weekStart}`, {
@@ -61,69 +68,161 @@ async function loadWeek() {
   renderTable()
 }
 
-function renderTable() {
-  const headers = document.getElementById('day-headers')
-  const rowStatus = document.getElementById('row-status')
-  const rowMorning = document.getElementById('row-morning')
-  const rowAfternoon = document.getElementById('row-afternoon')
-  const rowNight = document.getElementById('row-night')
+// --- Render ---
 
-  ;[headers, rowStatus, rowMorning, rowAfternoon, rowNight].forEach(row => {
+function renderTable() {
+  const headers     = document.getElementById('day-headers')
+  const rowMorning  = document.getElementById('row-morning')
+  const rowAfternoon = document.getElementById('row-afternoon')
+  const rowEvening  = document.getElementById('row-evening')
+  const rowChoose   = document.getElementById('row-choose')
+
+  ;[headers, rowMorning, rowAfternoon, rowEvening, rowChoose].forEach(row => {
     while (row.children.length > 1) row.removeChild(row.lastChild)
   })
 
   weekData.forEach((day, i) => {
-    const date = new Date(day.date + 'T00:00:00')
-    const isAvailable = day.dayStatus === 'AVAILABLE'
-    const isUnavailable = day.dayStatus === 'UNAVAILABLE'
-
+    // Header
     const th = document.createElement('th')
     th.innerHTML = `<div class="day-name">${DAY_NAMES[i]}</div><div class="day-date">${day.date}</div>`
     headers.appendChild(th)
 
-    const tdStatus = document.createElement('td')
-    const btn = document.createElement('button')
-    btn.className = `status-btn ${isAvailable ? 'available' : isUnavailable ? 'unavailable' : 'not-set'}`
-    btn.textContent = isAvailable ? 'Tillgänglig' : isUnavailable ? 'Otillgänglig' : 'Ej satt'
-    btn.onclick = () => cycleStatus(i)
-    tdStatus.appendChild(btn)
-    rowStatus.appendChild(tdStatus)
-
+    // Shift rows
     ;[
       { row: rowMorning,   field: 'preferMorning' },
       { row: rowAfternoon, field: 'preferAfternoon' },
-      { row: rowNight,     field: 'preferNight' },
+      { row: rowEvening,   field: 'preferNight' },
     ].forEach(({ row, field }) => {
       const td = document.createElement('td')
-      const cb = document.createElement('input')
-      cb.type = 'checkbox'
-      cb.className = 'shift-checkbox'
-      cb.checked = day[field]
-      cb.disabled = !isAvailable
-      cb.onchange = () => { weekData[i][field] = cb.checked }
-      td.appendChild(cb)
+      td.appendChild(makeStatusBadge(day, field))
       row.appendChild(td)
     })
+
+    // Choose button
+    const tdChoose = document.createElement('td')
+    const btn = document.createElement('button')
+    btn.className = 'choose-btn'
+    btn.textContent = 'Choose availability'
+    btn.onclick = () => openModal(i)
+    tdChoose.appendChild(btn)
+    rowChoose.appendChild(tdChoose)
   })
 }
 
-function cycleStatus(index) {
-  const current = weekData[index].dayStatus
-  if (current === null || current === undefined) {
-    weekData[index].dayStatus = 'AVAILABLE'
-  } else if (current === 'AVAILABLE') {
-    weekData[index].dayStatus = 'UNAVAILABLE'
-    weekData[index].preferMorning = false
-    weekData[index].preferAfternoon = false
-    weekData[index].preferNight = false
+function makeStatusBadge(day, field) {
+  const span = document.createElement('span')
+  span.className = 'cell-status'
+
+  const isPartial = day.preferMorning || day.preferAfternoon || day.preferNight
+
+  if (!day.dayStatus) {
+    span.className += ' not-set'
+    span.textContent = '–'
+  } else if (day.dayStatus === 'UNAVAILABLE') {
+    span.className += ' unavailable'
+    span.textContent = 'Ej tillgänglig'
+  } else if (day[field]) {
+    span.className += ' prefer'
+    span.textContent = 'Föredrar'
+  } else if (isPartial) {
+    span.className += ' unavailable'
+    span.textContent = 'Ej tillgänglig'
   } else {
-    weekData[index].dayStatus = null
+    span.className += ' available'
+    span.textContent = 'Tillgänglig'
   }
-  renderTable()
+
+  return span
 }
+
+// --- Modal ---
+
+function openModal(index) {
+  activeIndex = index
+  const day = weekData[index]
+
+  // Restore state from existing data
+  if (!day.dayStatus) {
+    modalStatus = null
+  } else if (day.dayStatus === 'UNAVAILABLE') {
+    modalStatus = 'unavailable'
+  } else if (day.preferMorning || day.preferAfternoon || day.preferNight) {
+    modalStatus = 'partial'
+  } else {
+    modalStatus = 'all'
+  }
+
+  modalShifts = {
+    morning:   day.preferMorning,
+    afternoon: day.preferAfternoon,
+    evening:   day.preferNight,
+  }
+
+  renderModal()
+  document.getElementById('modal-overlay').classList.add('open')
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open')
+  activeIndex = null
+}
+
+function selectStatus(status) {
+  modalStatus = status
+  if (status !== 'partial') {
+    modalShifts = { morning: false, afternoon: false, evening: false }
+  }
+  renderModal()
+}
+
+function toggleShift(shift) {
+  if (modalStatus !== 'partial') return
+  modalShifts[shift] = !modalShifts[shift]
+  renderModal()
+}
+
+function renderModal() {
+  document.getElementById('opt-all').classList.toggle('selected',     modalStatus === 'all')
+  document.getElementById('opt-partial').classList.toggle('selected', modalStatus === 'partial')
+  document.getElementById('opt-unavail').classList.toggle('selected', modalStatus === 'unavailable')
+
+  const shiftsDisabled = modalStatus !== 'partial'
+  ;['morning', 'afternoon', 'evening'].forEach(s => {
+    const btn = document.getElementById(`shift-${s}`)
+    btn.disabled = shiftsDisabled
+    btn.classList.toggle('selected', !shiftsDisabled && modalShifts[s])
+  })
+}
+
+function confirmModal() {
+  if (activeIndex === null || modalStatus === null) {
+    closeModal()
+    return
+  }
+
+  const day = weekData[activeIndex]
+
+  if (modalStatus === 'unavailable') {
+    day.dayStatus      = 'UNAVAILABLE'
+    day.preferMorning  = false
+    day.preferAfternoon = false
+    day.preferNight    = false
+  } else {
+    day.dayStatus       = 'AVAILABLE'
+    day.preferMorning   = modalStatus === 'partial' ? modalShifts.morning   : false
+    day.preferAfternoon = modalStatus === 'partial' ? modalShifts.afternoon : false
+    day.preferNight     = modalStatus === 'partial' ? modalShifts.evening   : false
+  }
+
+  renderTable()
+  closeModal()
+}
+
+// --- Save ---
 
 async function saveAvailability() {
   const statusEl = document.getElementById('save-status')
+  statusEl.style.color = '#2b8a3e'
   statusEl.textContent = 'Sparar...'
 
   const toSave = weekData.filter(d => d.dayStatus !== null)
@@ -137,11 +236,11 @@ async function saveAvailability() {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          date: day.date,
-          dayStatus: day.dayStatus,
-          preferMorning: day.preferMorning,
+          date:           day.date,
+          dayStatus:      day.dayStatus,
+          preferMorning:  day.preferMorning,
           preferAfternoon: day.preferAfternoon,
-          preferNight: day.preferNight,
+          preferNight:    day.preferNight,
         })
       })
     ))
@@ -153,6 +252,8 @@ async function saveAvailability() {
     statusEl.textContent = 'Kunde inte spara.'
   }
 }
+
+// --- Logout ---
 
 function logout() {
   localStorage.removeItem('token')
