@@ -16,6 +16,7 @@ async function login() {
    
     if (data.token) {
       localStorage.setItem("token", data.token);
+      location.href = '/schedule.html'
     }
 
     document.getElementById("result").innerText =
