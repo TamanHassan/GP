@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
-import { prisma } from '../lib/prisma'
-import { updateAvailabilitySchema } from '../schemas/availability.schema'
+import { prisma } from '../prisma/client.js'
+import { updateAvailabilitySchema } from '../schemas/availability.schema.js'
 
 
 function getWeekDates(weekStart: string): Date[] {
