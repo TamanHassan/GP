@@ -1,10 +1,12 @@
 import express from "express";
 import employeeRouter from "./employee.routes.js";
+import availabilityRouter from "../availability/availability.routes.js";
 
 const app = express();
 
 app.use(express.json());
 app.use("/employees", employeeRouter);
+app.use("/availability", availabilityRouter);
 
 app.get("/", (req, res) => {
   res.json({ message: "API is running" });
