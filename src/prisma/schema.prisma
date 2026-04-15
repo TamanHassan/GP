@@ -8,21 +8,41 @@ datasource db {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  email    String   @unique
-  password String
-  role     Role
-  employee Employee?
+  id           Int            @id @default(autoincrement())
+  email        String         @unique
+  password     String
+  name         String
+  role         Role
+  employee     Employee?
+  availability Availability[]
 }
 
 model Employee {
-  id     Int  @id @default(autoincrement())
+  id     Int    @id @default(autoincrement())
   name   String
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id])
+  userId Int    @unique
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Availability {
+  id              Int       @id @default(autoincrement())
+  employeeId      Int
+  date            DateTime
+  dayStatus       DayStatus
+  preferMorning   Boolean   @default(false)
+  preferAfternoon Boolean   @default(false)
+  preferNight     Boolean   @default(false)
+  employee        User      @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date])
 }
 
 enum Role {
-  employer
-  employee
+  EMPLOYER
+  EMPLOYEE
+}
+
+enum DayStatus {
+  AVAILABLE
+  UNAVAILABLE
 }
