@@ -5,7 +5,7 @@ export const requireEmployer = (
   res: Response,
   next: NextFunction
 ) => {
-  if (req.user?.role !== "employer") {
+  if (req.user?.role !== "EMPLOYER") {
     return res.status(403).json({ message: "Forbidden" });
   }
 
