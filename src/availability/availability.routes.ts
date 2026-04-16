@@ -1,7 +1,7 @@
 import express from 'express'
 import { getMyAvailability, updateMyAvailability, getAllEmployeesAvailability } from './availability.js'
-import { authenticate } from '../employees/middleware/auth.middleware.js'
-import { requireEmployer } from '../employees/middleware/role.middleware.js'
+import { authenticate } from '../middleware/auth.middleware.js'
+import { requireEmployer } from '../middleware/role.middleware.js'
 
 const router = express.Router()
 

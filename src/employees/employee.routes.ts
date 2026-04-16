@@ -1,7 +1,7 @@
 ﻿import express from "express";
 import { fetchEmployees, login } from "./employee.controller.js";
-import { authenticate } from "./middleware/auth.middleware.js";
-import { requireEmployer } from "./middleware/role.middleware.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import { requireEmployer } from "../middleware/role.middleware.js";
 
 const router = express.Router();
 

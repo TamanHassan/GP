@@ -1,12 +1,11 @@
-// src/routes/assignment.routes.ts
-
-import { Router } from 'express'
-import { authenticate, requireEmployer } from '../middleware/auth.middleware'
+import { Router } from 'express';
+import { authenticate } from "../middleware/auth.middleware.js";
+import { requireEmployer } from "../middleware/role.middleware.js";
 import {
   getAssignments,
   createAssignment,
   deleteAssignment,
-} from '../controllers/assignment.controller'
+} from './assignment.controller.js'
 
 const router = Router()
 

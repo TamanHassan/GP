@@ -1,8 +1,8 @@
 // src/controllers/assignment.controller.ts
 
 import { Request, Response } from 'express'
-import { prisma } from '../lib/prisma'
-import { createAssignmentSchema, deleteAssignmentSchema } from '../schemas/assignment.schema'
+import { prisma } from '../prisma/client.js'
+import { createAssignmentSchema, deleteAssignmentSchema } from '../schemas/assignment.schema.js'
 
 function todayString(): string {
   return new Date().toISOString().split('T')[0]
