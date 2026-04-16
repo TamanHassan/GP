@@ -103,11 +103,11 @@
 
     .employee-badge:hover { opacity: 0.8; }
 
-    .employee-badge.assigned   { background: #d3f9d8; color: #2b8a3e; }
-    .employee-badge.prefer     { background: #fff3bf; color: #e67700; }
-    .employee-badge.available  { background: #e7f5ff; color: #1971c2; }
-    .employee-badge.unavailable{ background: #ffe3e3; color: #c92a2a; cursor: default; }
-    .employee-badge.not-set    { background: #f1f3f5; color: #adb5bd; cursor: default; }
+    .employee-badge.assigned    { background: #fff3bf; color: #e67700; }
+    .employee-badge.prefer      { background: #d3f9d8; color: #2b8a3e; }
+    .employee-badge.available   { background: #e7f5ff; color: #1971c2; }
+    .employee-badge.unavailable { background: #ffe3e3; color: #c92a2a; }
+    .employee-badge.not-set     { background: #f1f3f5; color: #adb5bd; }
 
     .badge-name { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .badge-action { font-size: 14px; }
@@ -139,8 +139,8 @@
       border-radius: 3px;
     }
 
-    .legend-dot.assigned   { background: #d3f9d8; border: 1px solid #2b8a3e; }
-    .legend-dot.prefer     { background: #fff3bf; border: 1px solid #e67700; }
+    .legend-dot.assigned   { background: #d3f9d8; border: 1px solid #e67700; }
+    .legend-dot.prefer     { background: #fff3bf; border: 1px solid #2b8a3e; }
     .legend-dot.available  { background: #e7f5ff; border: 1px solid #1971c2; }
     .legend-dot.unavailable{ background: #ffe3e3; border: 1px solid #c92a2a; }
     .legend-dot.not-set    { background: #f1f3f5; border: 1px solid #adb5bd; }
@@ -282,7 +282,7 @@
   const SHIFTS = ['MORNING','AFTERNOON','NIGHT']
 
   let currentWeekStart = getMonday(new Date())
-  let pendingAction = null  // { type: 'assign'|'remove', employeeId, assignmentId, date, shift, name }
+  let pendingAction = null
 
   if (!TOKEN) {
     document.getElementById('no-token').style.display = 'block'
