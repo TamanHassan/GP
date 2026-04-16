@@ -10,11 +10,8 @@ import {
 const router = Router()
 
 router.use(authenticate, requireEmployer)
-
-router.get('/assignments', getAssignments)
-
-router.post('/assignments', createAssignment)
-
-router.delete('/assignments/:id', deleteAssignment)
+router.get('/', getAssignments)
+router.post('/', createAssignment)
+router.delete('/:id', deleteAssignment)
 
 export default router

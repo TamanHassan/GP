@@ -12,7 +12,10 @@ app.use(express.static(path.join(process.cwd(), "Frontend")));
 app.use("/employees", employeeRouter);
 app.use("/availability", availabilityRouter);
 app.use("/assignments", assignmentRouter)
-
+app.use((req, res, next) => {
+  console.log(req.method, req.path)
+  next()
+})
 app.get("/", (req, res) => {
   res.sendFile(path.join(process.cwd(), "Frontend", "index.html"));
 });
