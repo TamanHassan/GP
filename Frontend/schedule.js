@@ -3,12 +3,9 @@ const DAY_NAMES = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön']
 let currentWeekStart = getMondayOf(new Date())
 let weekData = []
 
-// Modal state
 let activeIndex = null
 let modalStatus = null       // 'all' | 'partial' | 'unavailable'
 let modalShifts = { morning: false, afternoon: false, evening: false }
-
-// --- Init ---
 
 const token = localStorage.getItem('token')
 
@@ -18,8 +15,6 @@ if (!token) {
   document.getElementById('schedule-section').style.display = 'block'
   loadWeek()
 }
-
-// --- Week helpers ---
 
 function getMondayOf(date) {
   const d = new Date(date)
@@ -38,8 +33,6 @@ function changeWeek(dir) {
   currentWeekStart.setDate(currentWeekStart.getDate() + dir * 7)
   loadWeek()
 }
-
-// --- Load ---
 
 async function loadWeek() {
   const weekStart = toISO(currentWeekStart)
@@ -68,8 +61,6 @@ async function loadWeek() {
   renderTable()
 }
 
-// --- Render ---
-
 function renderTable() {
   const headers     = document.getElementById('day-headers')
   const rowMorning  = document.getElementById('row-morning')
@@ -87,7 +78,6 @@ function renderTable() {
     th.innerHTML = `<div class="day-name">${DAY_NAMES[i]}</div><div class="day-date">${day.date}</div>`
     headers.appendChild(th)
 
-    // Shift rows
     ;[
       { row: rowMorning,   field: 'preferMorning' },
       { row: rowAfternoon, field: 'preferAfternoon' },
@@ -98,7 +88,6 @@ function renderTable() {
       row.appendChild(td)
     })
 
-    // Choose button
     const tdChoose = document.createElement('td')
     const btn = document.createElement('button')
     btn.className = 'choose-btn'
@@ -133,13 +122,11 @@ function makeStatusBadge(day, field) {
   return span
 }
 
-// --- Modal ---
 
 function openModal(index) {
   activeIndex = index
   const day = weekData[index]
 
-  // Restore state from existing data
   if (!day.dayStatus) {
     modalStatus = null
   } else if (day.dayStatus === 'UNAVAILABLE') {
@@ -218,7 +205,6 @@ function confirmModal() {
   closeModal()
 }
 
-// --- Save ---
 
 async function saveAvailability() {
   const statusEl = document.getElementById('save-status')
@@ -253,8 +239,6 @@ async function saveAvailability() {
     statusEl.textContent = 'Kunde inte spara.'
   }
 }
-
-// --- Logout ---
 
 function logout() {
   localStorage.removeItem('token')
