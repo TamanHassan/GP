@@ -15,6 +15,7 @@ model User {
   role         Role
   employee     Employee?
   availability Availability[]
+  assignments   Assignment[]
 }
 
 model Employee {
@@ -36,6 +37,22 @@ model Availability {
   employee        User      @relation(fields: [employeeId], references: [id])
 
   @@unique([employeeId, date])
+}
+
+model Assignment {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  date       DateTime @db.Date
+  shift      Shift
+  employee   User     @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date, shift])
+}
+
+enum Shift {
+  MORNING
+  AFTERNOON
+  NIGHT
 }
 
 enum Role {
