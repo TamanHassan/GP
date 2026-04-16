@@ -16,8 +16,14 @@ async function login() {
    
     if (data.token) {
       localStorage.setItem("token", data.token);
-      location.href = '/schedule.html'
-    }
+      const payload = JSON.parse(atob(data.token.split('.')[1]));
+      if (payload.role === 'EMPLOYER') {
+        location.href = '/job_schedule.html';
+      }
+        else {
+          location.href = '/schedule.html'
+        }
+      }
 
     document.getElementById("result").innerText =
       JSON.stringify(data, null, 2);
@@ -27,7 +33,6 @@ async function login() {
     document.getElementById("result").innerText = "Login failed";
   }
 }
-
 
 
 async function getEmployees() {
