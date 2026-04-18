@@ -2,35 +2,295 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Employee Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Management System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 300;
+      margin-bottom: 10px;
+    }
+
+    .main-content {
+      padding: 40px;
+    }
+
+    .auth-section {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .auth-section h2 {
+      color: #333;
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group input {
+      width: 100%;
+      max-width: 400px;
+      padding: 15px;
+      border: 2px solid #e1e5e9;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #4facfe;
+      box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 5px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+
+    .employee-section {
+      display: none;
+    }
+
+    .section-title {
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 1.8rem;
+      font-weight: 400;
+      border-bottom: 3px solid #4facfe;
+      padding-bottom: 10px;
+    }
+
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 40px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .users-table th {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      padding: 15px;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .users-table td {
+      padding: 15px;
+      border-bottom: 1px solid #e1e5e9;
+    }
+
+    .users-table tr:hover {
+      background: #f8f9fa;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .role-employee {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .role-employer {
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+
+    .add-employee-form {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .status-message {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .debug-info {
+      background: #f8f9fa;
+      border: 1px solid #e1e5e9;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    @media (max-width: 768px) {
+      .form-row {
+        flex-direction: column;
+      }
+      
+      .users-table {
+        font-size: 14px;
+      }
+      
+      .users-table th,
+      .users-table td {
+        padding: 10px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <h2>Login</h2>
+  <div class="container">
+    <div class="header">
+    </div>
 
-  
-  <input id="email" placeholder="Email" />
-  <br /><br />
+    <div class="main-content">
+      <div id="login-section" class="auth-section">
+        <div class="form-group">
+          <input type="email" id="email" placeholder="Enter your email" />
+        </div>
+        <div class="form-group">
+          <input type="password" id="password" placeholder="Enter your password" />
+        </div>
+        <div class="action-buttons">
+          <button class="btn" onclick="login()">Login as Employee</button>
+          <button class="btn btn-secondary" onclick="viewEmployees()">View Employees</button>
+          <button class="btn btn-danger" id="logout-button" onclick="logout()" style="display: none;">Logout</button>
+        </div>
+        <div id="status"></div>
+      </div>
 
-  <input id="password" type="password" placeholder="Password" />
-  <br /><br />
+      <div id="employee-area" class="employee-section">
+        <h2 class="section-title">All Users</h2>
+        <div id="employee-list"></div>
 
-  <button onclick="login()">Login</button>
+        <div class="add-employee-form">
+          <h3 class="section-title">Add New Employee</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <input type="text" id="employee-name" placeholder="Employee name" />
+            </div>
+            <div class="form-group">
+              <input type="email" id="employee-email" placeholder="Employee email" />
+            </div>
+            <div class="form-group">
+              <input type="password" id="employee-password" placeholder="Password" />
+            </div>
+          </div>
+          <div class="action-buttons">
+            <button class="btn btn-success" onclick="addEmployee()">Add Employee</button>
+          </div>
+        </div>
+      </div>
 
-  <hr />
+      <div id="result" class="debug-info"></div>
+    </div>
+  </div>
 
-  
-  <button onclick="getEmployees()">Get Employees</button>
-
-  
-  <button onclick="logout()">Logout</button>
-
-  <hr />
-
-  
-  <pre id="result"></pre>
-
-  
   <script src="/app.js"></script>
 </body>
 </html>
