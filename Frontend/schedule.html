@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Min tillgänglighet</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      padding: 32px 16px;
+    }
+
+    #app { max-width: 960px; margin: 0 auto; }
+
+    /* TOP BAR */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .top-bar h2 { font-size: 20px; }
+
+    /* WEEK NAV */
+    .week-nav {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    #week-label { font-weight: bold; font-size: 15px; }
+
+    /* TABLE */
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    .schedule-table th {
+      background: #3b5bdb;
+      color: white;
+      padding: 14px 10px;
+      text-align: center;
+    }
+
+    .schedule-table th .day-name { font-size: 15px; font-weight: bold; }
+    .schedule-table th .day-date { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+
+    .schedule-table th.row-label { background: #2f4cbf; }
+
+    .schedule-table td {
+      text-align: center;
+      padding: 12px 8px;
+      border-bottom: 1px solid #eee;
+      border-right: 1px solid #eee;
+      font-size: 13px;
+    }
+
+    .schedule-table td.row-label {
+      text-align: left;
+      padding-left: 16px;
+      background: #f8f9fa;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .schedule-table td .shift-time {
+      font-weight: normal;
+      color: #888;
+      font-size: 11px;
+    }
+
+    .schedule-table tr:last-child td { border-bottom: none; }
+
+    /* CELL STATUS */
+    .cell-status {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .cell-status.prefer      { background: #d3f9d8; color: #2b8a3e; }
+    .cell-status.available   { background: #e7f5ff; color: #1971c2; }
+    .cell-status.unavailable { background: #ffe3e3; color: #c92a2a; }
+    .cell-status.not-set     { background: #f1f3f5; color: #adb5bd; }
+
+    .choose-btn {
+      padding: 6px 12px;
+      background: #3b5bdb;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .choose-btn:hover { background: #2f4cbf; }
+
+    .save-bar {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #save-status { font-size: 13px; color: #2b8a3e; }
+
+    button { cursor: pointer; border: none; border-radius: 5px; font-size: 14px; padding: 8px 18px; }
+    .btn-primary   { background: #3b5bdb; color: white; }
+    .btn-primary:hover { background: #2f4cbf; }
+    .btn-secondary { background: #e9ecef; color: #333; }
+    .btn-secondary:hover { background: #dee2e6; }
+    .btn-danger    { background: #ffe3e3; color: #c92a2a; }
+
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #modal-overlay.open { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 10px;
+      padding: 28px 24px;
+      width: 340px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+
+    .modal h3 {
+      font-size: 17px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .status-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .status-option {
+      padding: 10px 14px;
+      border: 2px solid #dee2e6;
+      border-radius: 6px;
+      background: white;
+      font-size: 14px;
+      text-align: left;
+      transition: border-color 0.15s;
+    }
+
+    .status-option.selected { border-color: #3b5bdb; background: #edf2ff; color: #3b5bdb; font-weight: bold; }
+    .status-option:hover:not(.selected) { border-color: #adb5bd; }
+
+    #prefer-section { margin-bottom: 22px; }
+
+    #prefer-section p {
+      font-weight: bold;
+      font-size: 13px;
+      margin-bottom: 10px;
+      color: #555;
+    }
+
+    .shift-options {
+      display: flex;
+      gap: 8px;
+    }
+
+    .shift-btn {
+      flex: 1;
+      padding: 8px 6px;
+      border: 2px solid #dee2e6;
+      border-radius: 6px;
+      background: white;
+      font-size: 12px;
+      text-align: center;
+      transition: border-color 0.15s;
+    }
+
+    .shift-btn .shift-name { font-weight: bold; display: block; }
+    .shift-btn .shift-time { font-size: 10px; color: #888; display: block; }
+    .shift-btn.selected { border-color: #3b5bdb; background: #edf2ff; color: #3b5bdb; }
+    .shift-btn:hover:not(.selected):not(:disabled) { border-color: #adb5bd; }
+    .shift-btn:disabled { opacity: 0.35; cursor: default; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    #no-token {
+      text-align: center;
+      background: white;
+      padding: 32px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    #no-token a { color: #3b5bdb; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div id="no-token" style="display:none">
+    <p>Du är inte inloggad. <a href="/index.html">Logga in här</a>.</p>
+  </div>
+
+  <div id="schedule-section" style="display:none">
+    <div class="top-bar">
+      <h2>Min tillgänglighet</h2>
+      <button class="btn-danger" onclick="logout()">Logga ut</button>
+    </div>
+
+    <div class="week-nav">
+      <button class="btn-secondary" onclick="changeWeek(-1)">&#8592; Föregående</button>
+      <span id="week-label"></span>
+      <button class="btn-secondary" onclick="changeWeek(1)">Nästa &#8594;</button>
+    </div>
+
+    <table class="schedule-table">
+      <thead>
+        <tr id="day-headers">
+          <th class="row-label"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr id="row-morning">
+          <td class="row-label">Morgon <span class="shift-time">07–15</span></td>
+        </tr>
+        <tr id="row-afternoon">
+          <td class="row-label">Eftermiddag <span class="shift-time">15–18</span></td>
+        </tr>
+        <tr id="row-evening">
+          <td class="row-label">Kväll <span class="shift-time">18–23</span></td>
+        </tr>
+        <tr id="row-choose">
+          <td class="row-label"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="save-bar">
+      <span id="save-status"></span>
+      <button class="btn-primary" onclick="saveAvailability()">Spara</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="modal-overlay">
+  <div class="modal">
+    <h3>Select availability</h3>
+
+    <div class="status-options">
+      <button class="status-option" id="opt-all"     onclick="selectStatus('all')">Available all day</button>
+      <button class="status-option" id="opt-partial" onclick="selectStatus('partial')">Available partially</button>
+      <button class="status-option" id="opt-unavail" onclick="selectStatus('unavailable')">Unavailable</button>
+    </div>
+
+    <div id="prefer-section">
+      <p>I prefer:</p>
+      <div class="shift-options">
+        <button class="shift-btn" id="shift-morning"   onclick="toggleShift('morning')">
+          <span class="shift-name">Morgon</span>
+          <span class="shift-time">07–15</span>
+        </button>
+        <button class="shift-btn" id="shift-afternoon" onclick="toggleShift('afternoon')">
+          <span class="shift-name">Eftermiddag</span>
+          <span class="shift-time">15–18</span>
+        </button>
+        <button class="shift-btn" id="shift-evening"   onclick="toggleShift('evening')">
+          <span class="shift-name">Kväll</span>
+          <span class="shift-time">18–23</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary"   onclick="confirmModal()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="/schedule.js"></script>
+</body>
+</html>

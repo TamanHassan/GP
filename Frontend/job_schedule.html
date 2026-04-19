@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Job Schedule</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      padding: 32px 16px;
+    }
+
+    #app { max-width: 1100px; margin: 0 auto; }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .top-bar h2 { font-size: 20px; }
+
+    .week-nav {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    #week-label { font-weight: bold; font-size: 15px; }
+
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    .schedule-table th {
+      background: #3b5bdb;
+      color: white;
+      padding: 14px 10px;
+      text-align: center;
+    }
+
+    .schedule-table th .day-name { font-size: 15px; font-weight: bold; }
+    .schedule-table th .day-date { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+    .schedule-table th.row-label { background: #2f4cbf; min-width: 120px; }
+
+    .schedule-table td {
+      text-align: center;
+      padding: 10px 6px;
+      border-bottom: 1px solid #eee;
+      border-right: 1px solid #eee;
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    .schedule-table td.row-label {
+      text-align: left;
+      padding-left: 16px;
+      background: #f8f9fa;
+      font-weight: bold;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    .schedule-table td .shift-time {
+      font-weight: normal;
+      color: #888;
+      font-size: 11px;
+    }
+
+    .schedule-table tr:last-child td { border-bottom: none; }
+
+    /* Celle med ansatte */
+    .cell-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .employee-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: bold;
+      width: 100%;
+      justify-content: space-between;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s;
+    }
+
+    .employee-badge:hover { opacity: 0.8; }
+
+    .employee-badge.assigned    { background: #fff3bf; color: #e67700; }
+    .employee-badge.prefer      { background: #d3f9d8; color: #2b8a3e; }
+    .employee-badge.available   { background: #e7f5ff; color: #1971c2; }
+    .employee-badge.unavailable { background: #ffe3e3; color: #c92a2a; }
+    .employee-badge.not-set     { background: #f1f3f5; color: #adb5bd; }
+
+    .badge-name { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .badge-action { font-size: 14px; }
+
+    button { cursor: pointer; border: none; border-radius: 5px; font-size: 14px; padding: 8px 18px; }
+    .btn-primary   { background: #3b5bdb; color: white; }
+    .btn-primary:hover { background: #2f4cbf; }
+    .btn-secondary { background: #e9ecef; color: #333; }
+    .btn-secondary:hover { background: #dee2e6; }
+    .btn-danger    { background: #ffe3e3; color: #c92a2a; }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .legend-dot.assigned   { background: #d3f9d8; border: 1px solid #e67700; }
+    .legend-dot.prefer     { background: #fff3bf; border: 1px solid #2b8a3e; }
+    .legend-dot.available  { background: #e7f5ff; border: 1px solid #1971c2; }
+    .legend-dot.unavailable{ background: #ffe3e3; border: 1px solid #c92a2a; }
+    .legend-dot.not-set    { background: #f1f3f5; border: 1px solid #adb5bd; }
+
+    #no-token {
+      text-align: center;
+      background: white;
+      padding: 32px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    #no-token a { color: #3b5bdb; }
+
+    #status-msg {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #2b8a3e;
+      min-height: 20px;
+      text-align: right;
+    }
+
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #modal-overlay.open { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 10px;
+      padding: 28px 24px;
+      width: 320px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+
+    .modal h3 { font-size: 17px; margin-bottom: 12px; }
+    .modal p  { font-size: 14px; color: #555; margin-bottom: 22px; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div id="no-token" style="display:none">
+    <p>Du är inte inloggad. <a href="/index.html">Logga in här</a>.</p>
+  </div>
+
+  <div id="schedule-section" style="display:none">
+    <div class="top-bar">
+      <h2>Job Schedule</h2>
+      <button class="btn-danger" onclick="logout()">Logga ut</button>
+    </div>
+
+    <div class="week-nav">
+      <button class="btn-secondary" onclick="changeWeek(-1)">&#8592; Föregående</button>
+      <span id="week-label"></span>
+      <button class="btn-secondary" onclick="changeWeek(1)">Nästa &#8594;</button>
+    </div>
+
+    <table class="schedule-table">
+      <thead>
+        <tr id="day-headers">
+          <th class="row-label"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label">Morgon <span class="shift-time">07–15</span></td>
+          <td id="cell-MORNING-0"></td>
+          <td id="cell-MORNING-1"></td>
+          <td id="cell-MORNING-2"></td>
+          <td id="cell-MORNING-3"></td>
+          <td id="cell-MORNING-4"></td>
+          <td id="cell-MORNING-5"></td>
+          <td id="cell-MORNING-6"></td>
+        </tr>
+        <tr>
+          <td class="row-label">Eftermiddag <span class="shift-time">15–18</span></td>
+          <td id="cell-AFTERNOON-0"></td>
+          <td id="cell-AFTERNOON-1"></td>
+          <td id="cell-AFTERNOON-2"></td>
+          <td id="cell-AFTERNOON-3"></td>
+          <td id="cell-AFTERNOON-4"></td>
+          <td id="cell-AFTERNOON-5"></td>
+          <td id="cell-AFTERNOON-6"></td>
+        </tr>
+        <tr>
+          <td class="row-label">Kväll <span class="shift-time">18–23</span></td>
+          <td id="cell-NIGHT-0"></td>
+          <td id="cell-NIGHT-1"></td>
+          <td id="cell-NIGHT-2"></td>
+          <td id="cell-NIGHT-3"></td>
+          <td id="cell-NIGHT-4"></td>
+          <td id="cell-NIGHT-5"></td>
+          <td id="cell-NIGHT-6"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot assigned"></div> Tilldelad</div>
+      <div class="legend-item"><div class="legend-dot prefer"></div> Föredrar</div>
+      <div class="legend-item"><div class="legend-dot available"></div> Tillgänglig</div>
+      <div class="legend-item"><div class="legend-dot unavailable"></div> Ej tillgänglig</div>
+      <div class="legend-item"><div class="legend-dot not-set"></div> Ej satt</div>
+    </div>
+
+    <div id="status-msg"></div>
+  </div>
+
+</div>
+
+<div id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">Tilldela pass</h3>
+    <p id="modal-body"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Avbryt</button>
+      <button class="btn-primary" id="modal-confirm-btn">Bekräfta</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TOKEN = localStorage.getItem('token')
+  const DAYS  = ['Mån','Tis','Ons','Tor','Fre','Lör','Sön']
+  const SHIFTS = ['MORNING','AFTERNOON','NIGHT']
+
+  let currentWeekStart = getMonday(new Date())
+  let pendingAction = null
+
+  if (!TOKEN) {
+    document.getElementById('no-token').style.display = 'block'
+  } else {
+    document.getElementById('schedule-section').style.display = 'block'
+    renderWeek()
+  }
+
+  function getMonday(d) {
+    const date = new Date(d)
+    const day  = date.getDay()
+    const diff = (day === 0 ? -6 : 1 - day)
+    date.setDate(date.getDate() + diff)
+    date.setHours(0,0,0,0)
+    return date
+  }
+
+  function changeWeek(dir) {
+    currentWeekStart.setDate(currentWeekStart.getDate() + dir * 7)
+    renderWeek()
+  }
+
+  function toISO(date) {
+    return date.toISOString().split('T')[0]
+  }
+
+  async function renderWeek() {
+    const weekStart = toISO(currentWeekStart)
+
+    const weekEnd = new Date(currentWeekStart)
+    weekEnd.setDate(weekEnd.getDate() + 6)
+    document.getElementById('week-label').textContent =
+      `${toISO(currentWeekStart)} – ${toISO(weekEnd)}`
+
+    const headerRow = document.getElementById('day-headers')
+    while (headerRow.children.length > 1) headerRow.removeChild(headerRow.lastChild)
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(currentWeekStart)
+      d.setDate(d.getDate() + i)
+      const th = document.createElement('th')
+      th.innerHTML = `<div class="day-name">${DAYS[i]}</div><div class="day-date">${toISO(d)}</div>`
+      headerRow.appendChild(th)
+    }
+
+    SHIFTS.forEach(shift => {
+      for (let i = 0; i < 7; i++) {
+        const cell = document.getElementById(`cell-${shift}-${i}`)
+        if (cell) cell.innerHTML = '<div class="cell-inner"></div>'
+      }
+    })
+
+    let data
+    try {
+      const res = await fetch(`/assignments?weekStart=${weekStart}`, {
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+      })
+      if (!res.ok) throw new Error('Fel vid hämtning')
+      data = await res.json()
+    } catch (e) {
+      showStatus('Kunde inte hämta schema.', true)
+      return
+    }
+
+    data.forEach((day, i) => {
+      SHIFTS.forEach(shift => {
+        const cell = document.getElementById(`cell-${shift}-${i}`)
+        if (!cell) return
+        const inner = cell.querySelector('.cell-inner')
+        const employees = day.shifts[shift] || []
+
+        employees.forEach(emp => {
+          const badge = document.createElement('button')
+          badge.className = `employee-badge ${emp.status.toLowerCase()}`
+          badge.title = statusLabel(emp.status)
+
+          const nameSpan = document.createElement('span')
+          nameSpan.className = 'badge-action'
+          nameSpan.textContent = emp.name
+
+          const actionSpan = document.createElement('span')
+          actionSpan.className = 'badge-action'
+
+          if (emp.status === 'ASSIGNED') {
+            actionSpan.textContent = '✕'
+            badge.onclick = () => openRemoveModal(emp, day.date, shift)
+          } else if (emp.status === 'PREFER' || emp.status === 'AVAILABLE') {
+            actionSpan.textContent = '+'
+            badge.onclick = () => openAssignModal(emp, day.date, shift)
+          } else {
+            badge.disabled = true
+            actionSpan.textContent = ''
+          }
+
+          badge.appendChild(nameSpan)
+          badge.appendChild(actionSpan)
+          inner.appendChild(badge)
+        })
+      })
+    })
+  }
+
+  function statusLabel(status) {
+    const map = { ASSIGNED:'Tilldelad', PREFER:'Föredrar', AVAILABLE:'Tillgänglig', UNAVAILABLE:'Ej tillgänglig', NOT_SET:'Ej satt' }
+    return map[status] || status
+  }
+
+  function openAssignModal(emp, date, shift) {
+    const shiftName = { MORNING:'Morgon', AFTERNOON:'Eftermiddag', NIGHT:'Kväll' }[shift]
+    document.getElementById('modal-title').textContent = 'Tilldela pass'
+    document.getElementById('modal-body').textContent =
+      `Tilldela ${emp.name} ${shiftName}-passet ${date}?`
+    pendingAction = { type: 'assign', employeeId: emp.employeeId, date, shift, name: emp.name }
+    document.getElementById('modal-confirm-btn').onclick = confirmModal
+    document.getElementById('modal-overlay').classList.add('open')
+  }
+
+  function openRemoveModal(emp, date, shift) {
+    const shiftName = { MORNING:'Morgon', AFTERNOON:'Eftermiddag', NIGHT:'Kväll' }[shift]
+    document.getElementById('modal-title').textContent = 'Ta bort tilldelning'
+    document.getElementById('modal-body').textContent =
+      `Ta bort ${emp.name} från ${shiftName}-passet ${date}?`
+    pendingAction = { type: 'remove', assignmentId: emp.assignmentId, name: emp.name }
+    document.getElementById('modal-confirm-btn').onclick = confirmModal
+    document.getElementById('modal-overlay').classList.add('open')
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open')
+    pendingAction = null
+  }
+
+  async function confirmModal() {
+    closeModal()
+    if (!pendingAction) return
+
+    if (pendingAction.type === 'assign') {
+      await assignEmployee(pendingAction.employeeId, pendingAction.date, pendingAction.shift, pendingAction.name)
+    } else {
+      await removeAssignment(pendingAction.assignmentId, pendingAction.name)
+    }
+  }
+
+  async function assignEmployee(employeeId, date, shift, name) {
+    try {
+      const res = await fetch('/assignments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${TOKEN}`
+        },
+        body: JSON.stringify({ employeeId, date, shift })
+      })
+      if (!res.ok) throw new Error()
+      showStatus(`${name} tilldelad!`)
+      renderWeek()
+    } catch {
+      showStatus('Något gick fel vid tilldelning.', true)
+    }
+  }
+
+  async function removeAssignment(assignmentId, name) {
+    try {
+      const res = await fetch(`/assignments/${assignmentId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${TOKEN}` }
+      })
+      if (!res.ok) throw new Error()
+      showStatus(`Tilldelning för ${name} borttagen.`)
+      renderWeek()
+    } catch {
+      showStatus('Något gick fel vid borttagning.', true)
+    }
+  }
+
+  function showStatus(msg, isError = false) {
+    const el = document.getElementById('status-msg')
+    el.textContent = msg
+    el.style.color = isError ? '#c92a2a' : '#2b8a3e'
+    setTimeout(() => el.textContent = '', 3000)
+  }
+
+  function logout() {
+    localStorage.removeItem('token')
+    location.href = '/index.html'
+  }
+</script>
+</body>
+</html>

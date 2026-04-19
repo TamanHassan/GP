@@ -8,12 +8,23 @@ datasource db {
 }
 
 model User {
+<<<<<<< HEAD
   id       Int       @id @default(autoincrement())
   name     String
   email    String    @unique
   password String
   role     Role
   employee Employee?
+=======
+  id           Int            @id @default(autoincrement())
+  email        String         @unique
+  password     String
+  name         String
+  role         Role
+  employee     Employee?
+  availability Availability[]
+  assignments   Assignment[]
+>>>>>>> b07984176faed67068d16bed256453184459f63c
 }
 
 model Employee {
@@ -21,9 +32,53 @@ model Employee {
   name   String
   userId Int    @unique
   user   User   @relation(fields: [userId], references: [id])
+<<<<<<< HEAD
 }
 
 enum Role {
   EMPLOYEE
   EMPLOYER
 }
+=======
+}
+
+model Availability {
+  id              Int       @id @default(autoincrement())
+  employeeId      Int
+  date            DateTime
+  dayStatus       DayStatus
+  preferMorning   Boolean   @default(false)
+  preferAfternoon Boolean   @default(false)
+  preferNight     Boolean   @default(false)
+  isPartial       Boolean   @default(false)
+  employee        User      @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date])
+}
+
+model Assignment {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  date       DateTime @db.Date
+  shift      Shift
+  employee   User     @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date, shift])
+}
+
+enum Shift {
+  MORNING
+  AFTERNOON
+  NIGHT
+}
+
+enum Role {
+  EMPLOYER
+  EMPLOYEE
+}
+
+enum DayStatus {
+  AVAILABLE
+  UNAVAILABLE
+}
+>>>>>>> b07984176faed67068d16bed256453184459f63c
