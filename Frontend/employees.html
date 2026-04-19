@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Employees</title>
+</head>
+<body>
+  <h2>Employees</h2>
+  <button onclick="loadEmployees()">Refresh Employees</button>
+  <button onclick="logout()">Logout</button>
+  <div id="status" style="margin-top: 16px; color: #444;"></div>
+
+  <div id="employee-list" style="margin-top: 16px;"></div>
+
+  <hr />
+
+  <h3>Add Employee</h3>
+  <input id="employee-name" placeholder="Employee name" />
+  <br /><br />
+  <input id="employee-email" placeholder="Employee email" />
+  <br /><br />
+  <input id="employee-password" type="password" placeholder="Employee password" />
+  <br /><br />
+  <button onclick="addEmployee()">Add Employee</button>
+
+  <hr />
+  <pre id="result"></pre>
+
+  <script src="/app.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!localStorage.getItem('token')) {
+        window.location.href = '/';
+        return;
+      }
+      loadEmployees();
+    });
+  </script>
+</body>
+</html>
