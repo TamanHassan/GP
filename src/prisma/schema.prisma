@@ -8,6 +8,14 @@ datasource db {
 }
 
 model User {
+<<<<<<< HEAD
+  id       Int       @id @default(autoincrement())
+  name     String
+  email    String    @unique
+  password String
+  role     Role
+  employee Employee?
+=======
   id           Int            @id @default(autoincrement())
   email        String         @unique
   password     String
@@ -16,6 +24,7 @@ model User {
   employee     Employee?
   availability Availability[]
   assignments   Assignment[]
+>>>>>>> b07984176faed67068d16bed256453184459f63c
 }
 
 model Employee {
@@ -23,6 +32,14 @@ model Employee {
   name   String
   userId Int    @unique
   user   User   @relation(fields: [userId], references: [id])
+<<<<<<< HEAD
+}
+
+enum Role {
+  EMPLOYEE
+  EMPLOYER
+}
+=======
 }
 
 model Availability {
@@ -64,3 +81,4 @@ enum DayStatus {
   AVAILABLE
   UNAVAILABLE
 }
+>>>>>>> b07984176faed67068d16bed256453184459f63c

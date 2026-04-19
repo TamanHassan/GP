@@ -1,6 +1,12 @@
-﻿import type { Request, Response } from "express";
+﻿﻿import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { getAllEmployees, verifyCredentials } from "./employee.service.js";
+import {
+  getAllEmployees,
+  verifyCredentials,
+  createEmployee as createEmployeeService,
+  deleteEmployee as deleteEmployeeService,
+  deleteUser as deleteUserService,
+} from "./employee.service.js";
 
 type EmployeeWithUser = {
   id: number;
@@ -43,16 +49,42 @@ export const login = async (req: Request, res: Response) => {
 
 export const fetchEmployees = async (req: Request, res: Response) => {
   try {
-    const employees = await getAllEmployees();
-
-    const formatted = employees.map((emp: EmployeeWithUser) => ({
-      id: emp.id,
-      name: emp.name,
-      email: emp.user.email
-    }));
-
-    res.status(200).json(formatted);
+    const users = await getAllEmployees();
+    res.status(200).json(users);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch employees" });
+    res.status(500).json({ message: "Failed to fetch users" });
+  }
+};
+
+export const createEmployee = async (req: Request, res: Response) => {
+  const { name, email, password } = req.body ?? {};
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: "Name, email and password are required" });
+  }
+
+  try {
+    const employee = await createEmployeeService({ name, email, password });
+    res.status(201).json(employee);
+  } catch (error) {
+    console.error("Create employee error:", error);
+    const message = error instanceof Error ? error.message : "Failed to create employee";
+    res.status(400).json({ message });
+  }
+};
+
+export const deleteEmployee = async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ message: "ID must be a number" });
+  }
+
+  try {
+    await deleteUserService(id);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Delete user error:", error);
+    res.status(400).json({ message: error instanceof Error ? error.message : "Failed to delete user" });
   }
 };

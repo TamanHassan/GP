@@ -23,7 +23,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   }
 
   try {
-    const secret = 'secret'; // TODO: set in env
+    const secret = process.env.JWT_SECRET || "secret";
     const decoded = jwt.verify(token, secret);
     req.user = decoded;
     next();
