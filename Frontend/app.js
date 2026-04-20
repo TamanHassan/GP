@@ -33,24 +33,10 @@ async function login() {
 
     if (response.ok && data.token) {
       localStorage.setItem("token", data.token);
-      showStatus("Logged in successfully! Your authentication token is displayed below.", "success");
+      showStatus("Logged in successfully! Redirecting to schedule...", "success");
       showSection("logout-button", true);
-      // Show the token prominently in the result area
-      document.getElementById("result").innerHTML = `
-        <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #1976d2; margin-bottom: 15px;">Your Authentication Token</h3>
-          <div style="background: #fff; padding: 15px; border-radius: 4px; border: 2px solid #1976d2; font-family: monospace; word-break: break-all; font-size: 14px;">
-            ${data.token}
-          </div>
-          <p style="margin-top: 15px; color: #666; font-size: 14px;">
-            Keep this token secure. Use it to access protected endpoints.
-          </p>
-        </div>
-        <div style="margin-top: 20px;">
-          <h4>Full Response:</h4>
-          <pre>${JSON.stringify(data, null, 2)}</pre>
-        </div>
-      `;
+      // Redirect to schedule page
+      window.location.href = "/schedule.html";
     } else {
       showStatus(data.message || "Login failed.", "error");
     }
